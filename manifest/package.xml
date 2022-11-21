@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>CustomException</members>
+        <members>CustomExceptionTest</members>
+        <members>ErrorBuilder</members>
+        <members>ErrorBuilderTest</members>
+        <members>Errors</members>
+        <members>ErrorsTest</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>Error__c</members>
+        <name>CustomObject</name>
+    </types>
+    <types>
+        <name>CustomField</name>
+    </types>
+    <types>
+        <members>Error__c</members>
+        <name>CustomTab</name>
+    </types>
+    <types>
+        <members>Error__c-Error Layout</members>
+        <name>Layout</name>
+    </types>
+    <types>
+        <name>ListView</name>
+    </types>
+    <version>56.0</version>
+</Package>
