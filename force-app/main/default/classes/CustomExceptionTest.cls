@@ -33,8 +33,6 @@ private class CustomExceptionTest {
             FROM Error__c
         ];
 
-        System.debug(LoggingLevel.DEBUG, 'merf ' + assertErrors[0]);
-
         System.assertEquals(1, assertErrors.size(),
             '1 Error__c should have been created.');
         System.assert(assertErrors[0].Full_Message__c.contains('Custom exception message'),

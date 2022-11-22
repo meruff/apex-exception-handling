@@ -103,7 +103,10 @@ public without sharing class CustomException extends Exception {
      */
     @TestVisible
     private static void throwContactException(Boolean isCustom) {
-        if (!Test.isRunningTest()) return;
+        if (!Test.isRunningTest()) {
+            return;
+        }
+
         try {
             insert new Contact();
         } catch (Exception e) {
