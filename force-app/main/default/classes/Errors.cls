@@ -7,32 +7,48 @@
  */
 public without sharing class Errors {
     /**
-     * @description Used the ErrorBuilder to create and insert a new Error__c record using the given parameters.
+     * @description Uses the ErrorBuilder to create and insert a new Custom_Exception_Log__e record using the
+     * given parameters.
      *
      * @param errorMsg a custom message String to write to the Error__c log generated.
      */
     public static void log(String errorMsg) {
-        log(new ErrorBuilder(errorMsg).build());
+        log(new ErrorBuilder(errorMsg).buildEvent());
     }
 
     /**
-     * @description Used the ErrorBuilder to create and insert a new Error__c record using the given parameters.
+     * @description Uses the ErrorBuilder to create and insert a new Custom_Exception_Log__e record using the
+     * given parameters.
      *
      * @param e the Exception that occurred. Used to pull detail from when creating the Error__c record.
      */
     public static void log(Exception e) {
-        log(new ErrorBuilder(e).build());
+        log(new ErrorBuilder(e).buildEvent());
     }
 
     /**
-     * @description Used the ErrorBuilder to create and insert a new Error__c record using the given parameters.
+     * @description Uses the ErrorBuilder to create and insert a new Custom_Exception_Log__e record using the
+     * given parameters.
      *
      * @param errorMsg a custom message String to write to the Error__c log generated.
      * @param e the Exception that occurred. Used to pull detail from when creating the Error__c record.
 
      */
     public static void log(String errorMsg, Exception e) {
-        log(new ErrorBuilder(errorMsg, e).build());
+        log(new ErrorBuilder(errorMsg, e).buildEvent());
+    }
+
+    /**
+     * @description Inserts the given Custom_Exception_Log__e record into the database. Events are inserted immediately.
+     *
+     * @param customExceptionLog the Custom_Exception_Log__e record to insert.
+     */
+    public static void log(Custom_Exception_Log__e customExceptionLog) {
+        try {
+            EventBus.publish(customExceptionLog);
+        } catch (Exception e) {
+            throw CustomException.catchException(e);
+        }
     }
 
     /**

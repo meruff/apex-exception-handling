@@ -60,15 +60,14 @@ public without sharing class CustomException extends Exception {
      */
     private static Exception buildCustomException(String errorMsg, Exception e, Boolean allDetail) {
         CustomException customException = new CustomException();
+        String detailedMessage = getDetailedExceptionMsg(errorMsg, e);
+        Errors.log(detailedMessage, e);
 
-        if (allDetail && e != null) {
-            String detailedMessage = getDetailedExceptionMsg(errorMsg, e);
-            Errors.log(detailedMessage, e);
-            customException.setMessage(detailedMessage);
-        } else {
-            Errors.log(errorMsg);
-            customException.setMessage(errorMsg);
-        }
+        customException.setMessage(
+            allDetail && e != null
+                ? detailedMessage
+                : errorMsg
+        );
 
         return customException;
     }
@@ -83,7 +82,7 @@ public without sharing class CustomException extends Exception {
      * @return the newly constructed String.
      */
     private static String getDetailedExceptionMsg(String exceptionMsg, Exception e) {
-        exceptionMsg += '\n';
+        exceptionMsg += '\n\n';
         exceptionMsg += 'Exception Detail:\n';
         exceptionMsg += 'Message: ' + e?.getMessage() + '\n';
         exceptionMsg += 'Type: ' + e?.getTypeName() + '\n';

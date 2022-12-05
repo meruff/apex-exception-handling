@@ -13,7 +13,7 @@ private class ErrorBuilderTest {
             .contextType('ErrorBuilderTest')
             .errorType('Generic')
             .objectName('Asset')
-            .recordId('02i03000004YVeLAAW')
+            .recordId('02i03000004YVeLAAW') // NOPMD
             .severityLevel('High')
             .stackTrace('Line 1 Col 3')
             .build();

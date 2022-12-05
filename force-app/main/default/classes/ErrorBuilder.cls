@@ -48,6 +48,16 @@ public without sharing class ErrorBuilder {
         this.e = e;
     }
 
+    public ErrorBuilder(Custom_Exception_Log__e customExceptionLog) {
+        this.contextType = customExceptionLog.Context_Type__c;
+        this.errorType = customExceptionLog.Error_Type__c;
+        this.errorMessage = customExceptionLog.Full_Message__c;
+        this.objectType = customExceptionLog.Object_Type__c;
+        this.recordUrl = customExceptionLog.Record_URL__c;
+        this.severityLevel = customExceptionLog.Severity_Level__c;
+        this.stackTrace = customExceptionLog.Stack_Trace__c;
+    }
+
     public ErrorBuilder contextType(String contextType) {
         this.contextType = contextType;
         return this;
@@ -89,6 +99,19 @@ public without sharing class ErrorBuilder {
 
     public Error__c build() {
         return new Error__c(
+            Context_Type__c = this.contextType,
+            Datetime__c = System.now(),
+            Error_Type__c = this.errorType,
+            Full_Message__c = this.errorMessage,
+            Object_Type__c = this.objectType,
+            Record_URL__c = this.recordUrl,
+            Severity_Level__c = this.severityLevel,
+            Stack_Trace__c = this.stackTrace
+        );
+    }
+
+    public Custom_Exception_Log__e buildEvent() {
+        return new Custom_Exception_Log__e(
             Context_Type__c = this.contextType,
             Datetime__c = System.now(),
             Error_Type__c = this.errorType,

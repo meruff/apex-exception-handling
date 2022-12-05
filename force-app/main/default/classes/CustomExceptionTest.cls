@@ -74,7 +74,7 @@ private class CustomExceptionTest {
 
         System.assertEquals(1, assertErrors.size(),
             '1 Error__c should have been created.');
-        System.assertEquals('Test custom exception message', assertErrors[0].Full_Message__c,
+        System.assert(assertErrors[0].Full_Message__c.containsIgnoreCase('Test custom exception message'),
             'The custom message should have been written to the Error__c record.');
     }
 
