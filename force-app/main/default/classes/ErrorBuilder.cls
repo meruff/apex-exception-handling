@@ -1,7 +1,7 @@
 /**
  * @description A helper class to create Error__c records. Uses a standard builder pattern.
  * 
- * @author Mat Ruff | mat.ruff@builtin.com
+ * @author Mat Ruff
  * 
  * @date 11/18/22
  */

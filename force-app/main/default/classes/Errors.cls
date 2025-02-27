@@ -1,7 +1,7 @@
 /**
  * @description A helper class to work with Error__c records.
  *
- * @author Mat Ruff | mat.ruff@builtin.com
+ * @author Mat Ruff
  *
  * @date 11/19/22
  */

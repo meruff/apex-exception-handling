@@ -1,7 +1,7 @@
 /**
  * @description A base class for creating generic Exceptions and logging Error__c records.
  *
- * @author Mat Ruff | mat.ruff@builtin.com
+ * @author Mat Ruff
  *
  * @date 11/18/22
  */
