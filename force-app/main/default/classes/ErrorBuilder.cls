@@ -11,7 +11,7 @@ public without sharing class ErrorBuilder {
     private String errorMessage;
     private String objectType = 'User';
     private String recordUrl = UserInfo.getUserId();
-    private String severityLevel = 'Med';
+    private String severityLevel = Errors.Severity.Med.name();
     private String stackTrace;
 
     private Exception e {
@@ -58,6 +58,12 @@ public without sharing class ErrorBuilder {
         this.stackTrace = customExceptionLog.Stack_Trace__c;
     }
 
+    public ErrorBuilder(Database.Error error) {
+        this.errorMessage = 'Message: ' + error.getMessage() +
+            ', Fields: ' + error.getFields() +
+            ', StatusCode: ' + error.getStatusCode();
+    }
+
     public ErrorBuilder contextType(String contextType) {
         this.contextType = contextType;
         return this;
@@ -83,7 +89,7 @@ public without sharing class ErrorBuilder {
             return this;
         }
 
-        this.recordUrl = Url.getSalesforceBaseUrl().toExternalForm() + '/' + recordId;
+        this.recordUrl = Url.getOrgDomainUrl().toExternalForm() + '/' + recordId;
         return this;
     }
 
@@ -121,5 +127,71 @@ public without sharing class ErrorBuilder {
             Severity_Level__c = this.severityLevel,
             Stack_Trace__c = this.stackTrace
         );
+    }
+
+    /**
+     * @description Builds a List of Error__c records from a given Database.SaveResult.
+     *
+     * @param saveResult the Database.SaveResult to build Error__c records from.
+     * @param errorType the context of the error that occurred.
+     *
+     * @return a new List of Error__c records for insertion.
+     */
+    public static List<Error__c> buildErrorsFromSaveResult(Database.SaveResult saveResult, String errorType) {
+        return buildCustomErrorsFromDatabaseErrors(saveResult.getErrors(), saveResult.getId(), errorType);
+    }
+
+    /**
+     * @description Builds a List of Error__c records from a given Database.UpsertResult.
+     *
+     * @param upsertResult the Database.UpsertResult to build Error__c records from.
+     * @param errorType the context of the error that occurred.
+     *
+     * @return a new List of Error__c records for insertion.
+     */
+    public static List<Error__c> buildErrorsFromUpsertResult(Database.UpsertResult upsertResult, String errorType) {
+        return buildCustomErrorsFromDatabaseErrors(upsertResult.getErrors(), upsertResult.getId(), errorType);
+    }
+
+    /**
+     * @description Builds a List of Error__c records from a given Database.DeleteResult.
+     *
+     * @param deleteResult the Database.DeleteResult to build Error__c records from.
+     * @param errorType the context of the error that occurred.
+     *
+     * @return a new List of Error__c records for insertion.
+     */
+    public static List<Error__c> buildErrorsFromDeleteResult(Database.DeleteResult deleteResult, String errorType) {
+        return buildCustomErrorsFromDatabaseErrors(deleteResult.getErrors(), deleteResult.getId(), errorType);
+    }
+
+    /**
+     * @description Builds a List of Error__c records from a given List of Database.Error records.
+     *
+     * @param databaseErrors a List of Database.Error records to build Error__c records from.
+     * @param recordId the Id of the record the error occurred on. Used to log the Id and API name of the record.
+     * @param errorType the context of the error that occurred. Typically this is the class / function that was being
+     * performed.
+     *
+     * @return a new List of Error__c records for insertion.
+     */
+    public static List<Error__c> buildCustomErrorsFromDatabaseErrors(
+        List<Database.Error> databaseErrors,
+        Id recordId,
+        String errorType
+    ) {
+        List<Error__c> customErrors = new List<Error__c>();
+        String objectApiName = recordId?.getSobjectType().getDescribe().getName();
+
+        for (Database.Error error : databaseErrors) {
+            customErrors.add(new ErrorBuilder(error)
+                .recordId(recordId)
+                .objectName(objectApiName)
+                .errorType(errorType)
+                .build()
+            );
+        }
+
+        return customErrors;
     }
 }

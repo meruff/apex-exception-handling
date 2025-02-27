@@ -3,6 +3,11 @@
  */
 @IsTest
 private class ErrorBuilderTest {
+    private static final String ASSERT_ONE_ERROR = '1 Error__c should have been created.';
+    private static final String ASSERT_VALUE_SHOULD_MATCH = 'Assert value should match the given value.';
+    private static final String TEST_DATABASE_ERROR_STRING = '{"message":"An unexpected error occurred.","fields":["Name"],"statusCode":""}';
+    private static final String TEST_ERROR = 'Test Error';
+
     /**
      * @description This tests creating an Error__c record using the builder with common fields.
      */
@@ -21,24 +26,24 @@ private class ErrorBuilderTest {
 
         Error__c assertError = [
             SELECT Id,
-                Datetime__c,
                 Context_Type__c,
                 Error_Type__c,
-                Full_Message__c,
                 Object_Type__c,
                 Record_URL__c,
-                Severity_Level__c,
-                Stack_Trace__c
+                Severity_Level__c
             FROM Error__c
             LIMIT 1
         ];
 
-        System.assertEquals('ErrorBuilderTest', assertError.Context_Type__c);
-        System.assertEquals('Generic', assertError.Error_Type__c);
-        System.assertEquals('Generic', assertError.Error_Type__c);
-        System.assertEquals('Asset', assertError.Object_Type__c);
-        System.assertEquals('High', assertError.Severity_Level__c);
-        System.assertEquals(Url.getSalesforceBaseUrl().toExternalForm() + '/02i03000004YVeLAAW', assertError.Record_URL__c);
+        Assert.areEqual('ErrorBuilderTest', assertError.Context_Type__c, ASSERT_VALUE_SHOULD_MATCH);
+        Assert.areEqual('Generic', assertError.Error_Type__c, ASSERT_VALUE_SHOULD_MATCH);
+        Assert.areEqual('Asset', assertError.Object_Type__c, ASSERT_VALUE_SHOULD_MATCH);
+        Assert.areEqual('High', assertError.Severity_Level__c, ASSERT_VALUE_SHOULD_MATCH);
+        Assert.areEqual(
+            Url.getOrgDomainUrl().toExternalForm() + '/02i03000004YVeLAAW',
+            assertError.Record_URL__c,
+            ASSERT_VALUE_SHOULD_MATCH
+        );
     }
 
     /**
@@ -59,8 +64,11 @@ private class ErrorBuilderTest {
             LIMIT 1
         ];
 
-        System.assertEquals('Different Message', assertError.Full_Message__c,
-            'Setting the errorMessage after constructor runs should overwrite the message.');
+        Assert.areEqual(
+            'Different Message',
+            assertError.Full_Message__c,
+            'Setting the errorMessage after constructor runs should overwrite the message.'
+        );
     }
 
     /**
@@ -81,19 +89,19 @@ private class ErrorBuilderTest {
 
         List<Error__c> assertErrors = [
             SELECT Id,
-                Datetime__c,
-                Error_Type__c,
-                Full_Message__c,
-                Stack_Trace__c
+                Full_Message__c
             FROM Error__c
         ];
 
-        System.assertEquals(1, assertErrors.size(),
-            '1 Error__c should have been created.');
-        System.assert(assertErrors[0].Full_Message__c.contains('Custom exception message'),
-            'The custom message should have been written to the Error__c record.');
-        System.assert(assertErrors[0].Full_Message__c.contains('Exception Detail'),
-            'Error message on the Error__c record should contain detailed lines.');
+        Assert.areEqual(1, assertErrors.size(), ASSERT_ONE_ERROR);
+        Assert.isTrue(
+            assertErrors[0].Full_Message__c.contains('Custom exception message'),
+            'The custom message should have been written to the Error__c record.'
+        );
+        Assert.isTrue(
+            assertErrors[0].Full_Message__c.contains('Exception Detail'),
+            'Error message on the Error__c record should contain detailed lines.'
+        );
     }
 
     /**
@@ -121,11 +129,103 @@ private class ErrorBuilderTest {
             FROM Error__c
         ];
 
-        System.assertEquals(1, assertErrors.size(),
-            '1 Error__c should have been created.');
-        System.assert(assertErrors[0].Full_Message__c.contains('REQUIRED_FIELD_MISSING'),
-            'The custom message should have been written to the Error__c record.');
-        System.assert(assertErrors[0].Full_Message__c.contains('Exception Detail'),
-            'Error message on the Error__c record should contain detailed lines.');
+        Assert.areEqual(1, assertErrors.size(), ASSERT_ONE_ERROR);
+        Assert.isTrue(
+            assertErrors[0].Full_Message__c.contains('REQUIRED_FIELD_MISSING'),
+            'The custom message should have been written to the Error__c record.'
+        );
+        Assert.isTrue(
+            assertErrors[0].Full_Message__c.contains('Exception Detail'),
+            'Error message on the Error__c record should contain detailed lines.'
+        );
+    }
+
+    /**
+     * @description This tests that a Database.Error is correctly converted to an Error__c record to be logged.
+     */
+    @IsTest
+    static void testDatabaseError() {
+        Test.startTest();
+        List<Database.SaveResult> saveResults = Database.update(
+            new List<Account>{new Account()},
+            false
+        );
+
+        Error__c assertError = new ErrorBuilder(saveResults[0].getErrors()[0])
+            .objectName('Account')
+            .errorType(TEST_ERROR)
+            .build();
+        Test.stopTest();
+
+        Assert.isTrue(
+            assertError.Full_Message__c.containsIgnoreCase(String.valueOf(StatusCode.MISSING_ARGUMENT)),
+            'Full Message should include status code from Database.Error.'
+        );
+        Assert.isTrue(
+            assertError.Full_Message__c.containsIgnoreCase('Id not specified in an update call'),
+            'Full Message should include no Id in update.'
+        );
+    }
+
+    @IsTest
+    static void testBuildErrorsFromSaveResult() {
+        Test.startTest();
+        List<Error__c> assertErrors = ErrorBuilder.buildErrorsFromSaveResult(
+            (Database.SaveResult) JSON.deserialize(
+                '{"success":false,"id":"' + TriggersTest.getFakeId(Account.SObjectType, 1) + '","errors":[' + TEST_DATABASE_ERROR_STRING + ']}',
+                Database.SaveResult.class
+            ),
+            TEST_ERROR
+        );
+        Test.stopTest();
+
+        Assert.areEqual(1, assertErrors.size(), ASSERT_ONE_ERROR);
+        Assert.areEqual(TEST_ERROR, assertErrors[0].Error_Type__c, ASSERT_VALUE_SHOULD_MATCH);
+    }
+
+    @IsTest
+    static void testBuildErrorsFromUpsertResult() {
+        Test.startTest();
+        List<Error__c> assertErrors = ErrorBuilder.buildErrorsFromUpsertResult(
+            (Database.UpsertResult) JSON.deserialize(
+                '{"success":false,"id":"' + TriggersTest.getFakeId(Account.SObjectType, 1) + '","errors":[' + TEST_DATABASE_ERROR_STRING + ']}',
+                Database.UpsertResult.class
+            ),
+            TEST_ERROR
+        );
+        Test.stopTest();
+
+        Assert.areEqual(1, assertErrors.size(), ASSERT_ONE_ERROR);
+        Assert.areEqual(TEST_ERROR, assertErrors[0].Error_Type__c, ASSERT_VALUE_SHOULD_MATCH);
+    }
+
+    @IsTest
+    static void testBuildErrorsFromDeleteResult() {
+        Test.startTest();
+        List<Error__c> assertErrors = ErrorBuilder.buildErrorsFromDeleteResult(
+            (Database.DeleteResult) JSON.deserialize(
+                '{"success":false,"id":"' + TriggersTest.getFakeId(Account.SObjectType, 1) + '","errors":[' + TEST_DATABASE_ERROR_STRING + ']}',
+                Database.DeleteResult.class
+            ),
+            TEST_ERROR
+        );
+        Test.stopTest();
+
+        Assert.areEqual(1, assertErrors.size(), ASSERT_ONE_ERROR);
+        Assert.areEqual(TEST_ERROR, assertErrors[0].Error_Type__c, ASSERT_VALUE_SHOULD_MATCH);
+    }
+
+    @IsTest
+    static void testBuildErrorsFromDatabaseErrors() {
+        Test.startTest();
+        List<Error__c> assertErrors = ErrorBuilder.buildCustomErrorsFromDatabaseErrors(
+            new List<Database.Error>{(Database.Error) JSON.deserialize(TEST_DATABASE_ERROR_STRING, Database.Error.class)},
+            TriggersTest.getFakeId(Account.SObjectType, 1),
+            TEST_ERROR
+        );
+        Test.stopTest();
+
+        Assert.areEqual(1, assertErrors.size(), ASSERT_ONE_ERROR);
+        Assert.areEqual(TEST_ERROR, assertErrors[0].Error_Type__c, ASSERT_VALUE_SHOULD_MATCH);
     }
 }

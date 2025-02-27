@@ -6,6 +6,10 @@
  * @date 11/19/22
  */
 public without sharing class Errors {
+    public static final String STATUS_CODE_DELIMITER = ';;';
+    public enum Severity { Low, Med, High }
+    public enum StatusCode { ContentStudioLogin }
+
     /**
      * @description Uses the ErrorBuilder to create and insert a new Custom_Exception_Log__e record using the
      * given parameters.
@@ -32,10 +36,34 @@ public without sharing class Errors {
      *
      * @param errorMsg a custom message String to write to the Error__c log generated.
      * @param e the Exception that occurred. Used to pull detail from when creating the Error__c record.
-
      */
     public static void log(String errorMsg, Exception e) {
         log(new ErrorBuilder(errorMsg, e).buildEvent());
+    }
+
+    /**
+     * @description Uses the ErrorBuilder to create and insert a new Custom_Exception_Log__e record using the
+     * given parameters.
+     *
+     * @param errorMsg a custom message String to write to the Error__c log generated.
+     * @param e the Exception that occurred. Used to pull detail from when creating the Error__c record.
+     * @param severity the severity to give the Error__c record created.
+     */
+    public static void log(String errorMsg, Exception e, Errors.Severity severity) {
+        log(new ErrorBuilder(errorMsg, e).severityLevel(severity.name()).buildEvent());
+    }
+
+    /**
+     * @description Uses the ErrorBuilder to create and insert a new Custom_Exception_Log__e record using the
+     * given parameters.
+     *
+     * @param errorMsg a custom message String to write to the Error__c log generated.
+     * @param e the Exception that occurred. Used to pull detail from when creating the Error__c record.
+     * @param severity the severity to give the Error__c record created.
+     * @param contextType the context type to give the Error__c record created.
+     */
+    public static void log(String errorMsg, Exception e, Errors.Severity severity, String contextType) {
+        log(new ErrorBuilder(errorMsg, e).severityLevel(severity.name()).contextType(contextType).buildEvent());
     }
 
     /**
@@ -43,6 +71,7 @@ public without sharing class Errors {
      *
      * @param customExceptionLog the Custom_Exception_Log__e record to insert.
      */
+    @AuraEnabled
     public static void log(Custom_Exception_Log__e customExceptionLog) {
         try {
             EventBus.publish(customExceptionLog);
@@ -83,9 +112,21 @@ public without sharing class Errors {
             new ErrorBuilder(errorMsg)
                 .objectName(sObj.getSObjectType().getDescribe().getName())
                 .recordId(sObj?.Id)
-                .build()
+                .buildEvent()
         );
         sObj.addError(errorMsg);
+    }
+
+    /**
+     * @description Adds the given StatusCode to the beginning of the given error message.
+     *
+     * @param statusCode the StatusCode to add to the error message.
+     * @param errorMsg the error message to add the StatusCode to.
+     *
+     * @return the new error message with the StatusCode added.
+     */
+    public static String messageWithStatusCode(StatusCode statusCode, String errorMsg) {
+        return statusCode.name() + STATUS_CODE_DELIMITER + errorMsg;
     }
 
     /**

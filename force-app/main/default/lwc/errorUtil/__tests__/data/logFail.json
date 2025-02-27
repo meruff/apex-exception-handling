@@ -1,0 +1,12 @@
+{
+  "body": {
+    "exceptionType": "System.QueryException",
+    "isUserDefinedException": false,
+    "message": "List has no rows for assignment to SObject",
+    "stackTrace": "Errors.log: line 10, column 1"
+  },
+  "headers": {},
+  "status": 500,
+  "ok": false,
+  "statusText": "Server Error"
+}

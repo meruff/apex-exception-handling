@@ -3,6 +3,11 @@
  */
 @IsTest
 private class CustomExceptionTest {
+    private static final String EXCEPTION_DETAIL = 'Exception Detail';
+    private static final String CUSTOM_MESSAGE_SHOULD_HAVE_BEEN_WRITTEN = 'The custom message should have been written to the Error__c record.';
+    private static final String ERROR_SHOULD_HAVE_BEEN_CREATED = '1 Error__c should have been created.';
+    private static final String TEST_CUSTOM_EXCEPTION_MESSAGE = 'Test custom exception message';
+
     /**
      * @description This tests catching an exception with a custom message then
      * logs the Error__c record. The exception message should contain detailed lines.
@@ -19,13 +24,12 @@ private class CustomExceptionTest {
         }
         Test.stopTest();
 
-        System.assert(assertMessage.contains('Custom exception message'),
-            'Custom error message should be returned.');
-        System.assert(assertMessage.contains('Exception Detail'),
-            'Error message should contain detailed lines.');
+        Assert.isTrue(assertMessage.contains('Custom exception message'), 'Custom error message should be returned.');
+        Assert.isTrue(assertMessage.contains(EXCEPTION_DETAIL), 'Error message should contain detailed lines.');
 
         List<Error__c> assertErrors = [
             SELECT Id,
+                Context_Type__c,
                 Datetime__c,
                 Error_Type__c,
                 Full_Message__c,
@@ -33,12 +37,15 @@ private class CustomExceptionTest {
             FROM Error__c
         ];
 
-        System.assertEquals(1, assertErrors.size(),
-            '1 Error__c should have been created.');
-        System.assert(assertErrors[0].Full_Message__c.contains('Custom exception message'),
-            'The custom message should have been written to the Error__c record.');
-        System.assert(assertErrors[0].Full_Message__c.contains('Exception Detail'),
-            'Error message on the Error__c record should contain detailed lines.');
+        Assert.areEqual(1, assertErrors.size(), ERROR_SHOULD_HAVE_BEEN_CREATED);
+        Assert.isTrue(
+            assertErrors[0].Full_Message__c.contains('Custom exception message'),
+            CUSTOM_MESSAGE_SHOULD_HAVE_BEEN_WRITTEN
+        );
+        Assert.isTrue(
+            assertErrors[0].Full_Message__c.contains(EXCEPTION_DETAIL),
+            'Error message on the Error__c record should contain detailed lines.'
+        );
     }
 
     /**
@@ -52,16 +59,17 @@ private class CustomExceptionTest {
         String assertMessage;
 
         try {
-            throw CustomException.catchUiException('Test custom exception message', null);
-        } catch (CustomException e) {
+            throw CustomException.catchUiException(TEST_CUSTOM_EXCEPTION_MESSAGE, null);
+        } catch (Exception e) {
             assertMessage = e.getMessage();
         }
         Test.stopTest();
 
-        System.assertEquals('Test custom exception message', assertMessage,
-            'Custom error message should be returned.');
-        System.assert(!assertMessage.contains('Exception Detail'),
-            'Error message should NOT contain detailed lines for UI exception.');
+        Assert.areEqual(TEST_CUSTOM_EXCEPTION_MESSAGE, assertMessage, 'Custom error message should be returned.');
+        Assert.isTrue(
+            !assertMessage.contains(EXCEPTION_DETAIL),
+            'Error message should NOT contain detailed lines for UI exception.'
+        );
 
         List<Error__c> assertErrors = [
             SELECT Id,
@@ -72,10 +80,11 @@ private class CustomExceptionTest {
             FROM Error__c
         ];
 
-        System.assertEquals(1, assertErrors.size(),
-            '1 Error__c should have been created.');
-        System.assert(assertErrors[0].Full_Message__c.containsIgnoreCase('Test custom exception message'),
-            'The custom message should have been written to the Error__c record.');
+        Assert.areEqual(1, assertErrors.size(), ERROR_SHOULD_HAVE_BEEN_CREATED);
+        Assert.isTrue(
+            assertErrors[0].Full_Message__c.containsIgnoreCase(TEST_CUSTOM_EXCEPTION_MESSAGE),
+            CUSTOM_MESSAGE_SHOULD_HAVE_BEEN_WRITTEN
+        );
     }
 
     /**
@@ -94,10 +103,8 @@ private class CustomExceptionTest {
         }
         Test.stopTest();
 
-        System.assert(assertMessage.contains('REQUIRED_FIELD_MISSING'),
-            'Standard error message should be returned.');
-        System.assert(assertMessage.contains('Exception Detail'),
-            'Error message should contain detailed lines.');
+        Assert.isTrue(assertMessage.contains('REQUIRED_FIELD_MISSING'), 'Standard error message should be returned.');
+        Assert.isTrue(assertMessage.contains(EXCEPTION_DETAIL), 'Error message should contain detailed lines.');
 
         List<Error__c> assertErrors = [
             SELECT Id,
@@ -108,11 +115,14 @@ private class CustomExceptionTest {
             FROM Error__c
         ];
 
-        System.assertEquals(1, assertErrors.size(),
-            '1 Error__c should have been created.');
-        System.assert(assertErrors[0].Full_Message__c.contains('REQUIRED_FIELD_MISSING'),
-            'The custom message should have been written to the Error__c record.');
-        System.assert(assertErrors[0].Full_Message__c.contains('Exception Detail'),
-            'Error message on the Error__c record should contain detailed lines.');
+        Assert.areEqual(1, assertErrors.size(), ERROR_SHOULD_HAVE_BEEN_CREATED);
+        Assert.isTrue(
+            assertErrors[0].Full_Message__c.contains('REQUIRED_FIELD_MISSING'),
+            CUSTOM_MESSAGE_SHOULD_HAVE_BEEN_WRITTEN
+        );
+        Assert.isTrue(
+            assertErrors[0].Full_Message__c.contains(EXCEPTION_DETAIL),
+            'Error message on the Error__c record should contain detailed lines.'
+        );
     }
 }
